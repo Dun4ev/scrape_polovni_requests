@@ -1,0 +1,8 @@
+botasaurus
+botasaurus-requests
+beautifulsoup4
+lxml
+pandas
+numpy
+plotly
+matplotlib
