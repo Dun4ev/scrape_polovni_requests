@@ -1,6 +1,13 @@
+# Environments
 venv/
-.DS_Store
+
+# Data and results
+data/
+results/
+
+# Python cache
 __pycache__/
 *.pyc
-*.html
-*.csv
+
+# OS-specific
+.DS_Store

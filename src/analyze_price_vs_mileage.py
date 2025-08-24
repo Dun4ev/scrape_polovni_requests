@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import re
 
-df = pd.read_csv("polovni_automobili.csv")
+df = pd.read_csv("data/raw/polovni_automobili.csv")
 df = df.dropna(subset=["price_eur","mileage_km","year"]).copy()
 
 # Модель: цена ~ пробег(тыс.км) + год
@@ -61,12 +61,12 @@ js_code = """
 # Вставляем JavaScript в конец body
 full_html = html.replace('</body>', js_code + '</body>')
 
-with open("xc60_price_vs_mileage.html", "w", encoding="utf-8") as f:
+with open("results/xc60_price_vs_mileage.html", "w", encoding="utf-8") as f:
     f.write(full_html)
 
 # Кандидаты «выгодных» (ниже тренда на >1.5*MAD и не крайний outlier)
 cheap = df[(z < -1.5) & (~df["is_outlier"])].sort_values("zscore")
 cheap[["title","year","mileage_km","price_eur","pred_price_eur","zscore","url"]].to_csv(
-    "xc60_candidates.csv", index=False)
+    "results/xc60_candidates.csv", index=False)
 
-print("Готово: интерактивный график xc60_price_vs_mileage.html, кандидаты xc60_candidates.csv")
+print("Готово: интерактивный график results/xc60_price_vs_mileage.html, кандидаты results/xc60_candidates.csv")

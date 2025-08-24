@@ -104,4 +104,4 @@ if __name__ == "__main__":
            "brand=volvo&model%5B%5D=xc60&year_from=2020&year_to=&showOldNew=all&without_price=1")
     df = scrape(URL, render=False)  # если начнутся блоки → True
     print(df)
-    df.to_csv('polovni_automobili.csv', index=False)
+    df.to_csv('data/raw/polovni_automobili.csv', index=False)
