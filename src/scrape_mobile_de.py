@@ -139,18 +139,34 @@ def scrape_mobile_de(url):
     return df
 
 if __name__ == "__main__":
-    SEARCH_URL = "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A40000&ref=srp&refId=e6204463-4319-2aa6-e10d-f9b0c1f6815b&s=Car&vc=Car"
-    
+    SEARCH_QUERIES = {
+        "Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A35000&ref=srp&refId=e6204463-4319-2aa6-e10d-f9b0c1f6815b&s=Car&vc=Car",
+        # Добавьте сюда другие модели по аналогии:
+        "Volvo XC90": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B37%3B%3B&p=%3A40000&ref=quickSearch&s=Car&vc=Car",
+        # "Audi A4": "https://suchen.mobile.de/fahrzeuge/search.html?brand=audi&model%5B%5D=a4&year_from=2019&",
+    }
+
     print("Starting mobile.de scraper with final JSON logic...")
     
-    df = scrape_mobile_de(SEARCH_URL)
-    
-    if not df.empty:
+    all_dfs = []
+    for query_name, url in SEARCH_QUERIES.items():
+        print(f"Scraping query: '{query_name}'...")
+        df = scrape_mobile_de(url)
+        
+        if not df.empty:
+            df['search_group'] = query_name # Присваиваем имя группы из ключа словаря
+            all_dfs.append(df)
+            print(f"Found {len(df)} results for '{query_name}'.")
+        else:
+            print(f"No data scraped for '{query_name}'.")
+
+    if all_dfs:
+        final_df = pd.concat(all_dfs, ignore_index=True)
         output_path = 'data/raw/mobile_de.csv'
-        df['search_group'] = 'Volvo XC60'
-        print(f"\nTotal results from mobile.de: {len(df)}")
-        print(df.head())
-        df.to_csv(output_path, index=False)
+        print(f"\nTotal results from mobile.de: {len(final_df)}")
+        print(final_df.head())
+        final_df.to_csv(output_path, index=False)
         print(f"\nData saved to {output_path}")
     else:
         print("No data was scraped from mobile.de.")
+
