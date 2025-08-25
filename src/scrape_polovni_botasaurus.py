@@ -102,6 +102,7 @@ def scrape(url, render=False):
             
     df = pd.DataFrame(cards).drop_duplicates(subset=["url"])
     df = df.dropna(subset=["price_eur","mileage_km","year"])
+    df['source'] = 'polovni_automobili' # Add source identifier
     return df
 
 if __name__ == "__main__":
