@@ -124,7 +124,7 @@ if not filtered_df.empty:
         except np.linalg.LinAlgError:
             st.warning(f"Не удалось построить модель для группы '{name}'.")
 
-fig.update_layout(xaxis_title="Пробег, км", yaxis_title="Цена, €", legend_title="Группы для сравнения", template="plotly_dark", height=650)
+fig.update_layout(xaxis_title="Пробег, км", yaxis_title="Цена, €", legend_title="Группы для сравнения", template="plotly_dark", height=650, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5))
 top_deals_df = get_top_deals(filtered_df)
 
 # --- Sidebar Export Button ---
@@ -209,3 +209,73 @@ else:
         "mileage_bin": st.column_config.Column("Категория пробега"),
         "source": st.column_config.Column("Источник")
     })
+
+    st.header("📊 Детальное сравнение цен между сайтами")
+    st.write("Выберите модель для подробного анализа ценовых распределений по источникам.")
+
+    # Selectbox for choosing a search_group
+    available_search_groups = sorted(filtered_df['search_group'].unique())
+    if available_search_groups:
+        selected_model_for_comparison = st.selectbox(
+            "Выберите модель для сравнения",
+            available_search_groups
+        )
+
+        # Filter data for the selected model across all sources
+        model_comparison_df = filtered_df[
+            filtered_df['search_group'] == selected_model_for_comparison
+        ].copy()
+
+        if not model_comparison_df.empty:
+            st.subheader(f"Статистика цен для {selected_model_for_comparison}")
+
+            # Calculate statistics by source
+            price_stats = model_comparison_df.groupby('source')['price_eur'].agg(
+                ['mean', 'median', 'std', lambda x: x.quantile(0.25), lambda x: x.quantile(0.75)]
+            ).rename(columns={'<lambda_0>': '25th_percentile', '<lambda_1>': '75th_percentile'})
+
+            st.dataframe(price_stats.style.format({
+                'mean': "€{:,.0f}",
+                'median': "€{:,.0f}",
+                'std': "€{:,.0f}",
+                '25th_percentile': "€{:,.0f}",
+                '75th_percentile': "€{:,.0f}"
+            }))
+
+            # Calculate percentage difference in median prices
+            if len(price_stats) > 1:
+                medians = price_stats['median'].to_dict()
+                sources = list(medians.keys())
+                
+                if len(sources) == 2:
+                    source1, source2 = sources[0], sources[1]
+                    median1, median2 = medians[source1], medians[source2]
+
+                    if median1 > 0 and median2 > 0:
+                        percentage_diff = ((median2 - median1) / median1) * 100
+                        st.write(f"**Разница медианных цен ({source2} относительно {source1}):** {percentage_diff:,.2f}%")
+                        if percentage_diff > 0:
+                            st.info(f"На сайте {source2} медианная цена на {selected_model_for_comparison} выше на {percentage_diff:,.2f}% по сравнению с {source1}.")
+                        elif percentage_diff < 0:
+                            st.info(f"На сайте {source2} медианная цена на {selected_model_for_comparison} ниже на {abs(percentage_diff):,.2f}% по сравнению с {source1}.")
+                        else:
+                            st.info(f"Медианные цены на {selected_model_for_comparison} на обоих сайтах одинаковы.")
+                    else:
+                        st.warning("Недостаточно данных для расчета процентной разницы медиан.")
+                else:
+                    st.warning("Для расчета процентной разницы медиан необходимо выбрать данные как минимум с двух источников.")
+            else:
+                st.warning("Выберите данные как минимум с двух источников для сравнения.")
+
+            st.subheader(f"Распределение цен для {selected_model_for_comparison}")
+            fig_box = px.box(model_comparison_df, x="source", y="price_eur", color="source",
+                             title=f"Распределение цен для {selected_model_for_comparison} по источникам",
+                             labels={"price_eur": "Цена, €", "source": "Источник"},
+                             template="plotly_dark")
+            fig_box.update_layout(showlegend=False) # Hide legend as source is on x-axis
+            st.plotly_chart(fig_box, use_container_width=True)
+
+        else:
+            st.warning("Нет данных для выбранной модели для сравнения.")
+    else:
+        st.warning("Нет доступных моделей для сравнения. Примените фильтры или соберите данные.")

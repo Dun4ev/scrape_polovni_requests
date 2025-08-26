@@ -4,6 +4,7 @@ venv/
 # Data and results
 data/
 results/
+output/
 
 # Python cache
 __pycache__/
