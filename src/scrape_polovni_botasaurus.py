@@ -107,9 +107,8 @@ def scrape(url, render=False):
 
 if __name__ == "__main__":
     SEARCH_QUERIES = {
-        "Volvo XC60": ("https://www.polovniautomobili.com/auto-oglasi/pretraga?brand=volvo&model%5B%5D=xc60&year_from=2019&year_to=&showOldNew=all&without_price=1"),
-        "BMW X5": ("https://www.polovniautomobili.com/auto-oglasi/pretraga?brand=bmw&model%5B%5D=x5&brand2=&price_from=&price_to=&year_from=2019&year_to=&flywheel=&atest=&door_num=&submit_1=&without_price=1&date_limit=&showOldNew=all&modeltxt=&engine_volume_from=&engine_volume_to=&power_from=&power_to=&mileage_from=&mileage_to=&emission_class=&seat_num=&wheel_side=&registration=&country=&country_origin=&city=&registration_price=&page=&sort="),
-        "Volvo XC90": ("https://www.polovniautomobili.com/auto-oglasi/pretraga?brand=volvo&model%5B%5D=xc90&year_from=2019&year_to=&showOldNew=all&without_price=1")
+        "Volvo XC60": ("https://www.polovniautomobili.com/auto-oglasi/pretraga?brand=volvo&model%5B%5D=xc60&brand2=&price_from=&price_to=41000&year_from=2021&year_to=&flywheel=&atest=&door_num=&submit_1=&without_price=1&date_limit=&showOldNew=all&modeltxt=&engine_volume_from=&engine_volume_to=&power_from=&power_to=&mileage_from=&mileage_to=&emission_class=&seat_num=&wheel_side=&registration=&country=&country_origin=&city=&registration_price=&page=&sort="),
+        "Volvo XC90": ("https://www.polovniautomobili.com/auto-oglasi/pretraga?brand=volvo&model%5B%5D=xc90&brand2=&price_from=20000&price_to=60000&year_from=2019&year_to=&flywheel=&atest=&door_num=&submit_1=&without_price=1&date_limit=&showOldNew=all&modeltxt=&engine_volume_from=&engine_volume_to=&power_from=&power_to=&mileage_from=&mileage_to=&emission_class=&seat_num=&wheel_side=&registration=&country=&country_origin=&city=&registration_price=&page=&sort=price_desc")
     }
 
     all_dfs = []

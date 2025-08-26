@@ -140,9 +140,9 @@ def scrape_mobile_de(url):
 
 if __name__ == "__main__":
     SEARCH_QUERIES = {
-        "Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A35000&ref=srp&refId=e6204463-4319-2aa6-e10d-f9b0c1f6815b&s=Car&vc=Car",
+        "Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2021%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A41000&ref=srp&refId=ae734efc-d5ac-a8c1-0bad-5187bc37c427&s=Car&vc=Car",
         # Добавьте сюда другие модели по аналогии:
-        "Volvo XC90": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B37%3B%3B&p=%3A40000&ref=quickSearch&s=Car&vc=Car",
+        "Volvo XC90": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B37%3B%3B&p=20000%3A60000&ref=srp&refId=0c06e572-875d-3e61-f8c1-04f4ce559e3d&s=Car&vc=Car",
         # "Audi A4": "https://suchen.mobile.de/fahrzeuge/search.html?brand=audi&model%5B%5D=a4&year_from=2019&",
     }
 
