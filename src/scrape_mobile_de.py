@@ -76,6 +76,7 @@ def parse_from_initial_state(html):
         attr = ad.get("attr", {})
         mileage_str = attr.get("ml")
         reg_date_str = attr.get("fr")
+        num_owners_str = attr.get("pvo")
         
         year = None
         if reg_date_str:
@@ -91,6 +92,10 @@ def parse_from_initial_state(html):
         if price_str:
             price = int(re.sub(r'[^\d]', '', price_str))
 
+        num_owners = None
+        if num_owners_str and num_owners_str.isdigit():
+            num_owners = int(num_owners_str)
+
         if all([url, title, price, mileage, year]):
             cards.append({
                 "url": "https://suchen.mobile.de" + url,
@@ -98,6 +103,7 @@ def parse_from_initial_state(html):
                 "price_eur": price,
                 "mileage_km": mileage,
                 "year": year,
+                "num_owners": num_owners,
                 "source": "mobile.de"
             })
 
@@ -135,16 +141,23 @@ def scrape_mobile_de(url):
     if df.empty:
         return df
         
-    df = df.dropna().astype({"price_eur": int, "mileage_km": int, "year": int})
+    df = df.dropna(subset=['price_eur', 'mileage_km', 'year'])
+    df = df.astype({
+        "price_eur": int,
+        "mileage_km": int,
+        "year": int,
+        "num_owners": "Int64" # Use nullable integer type
+    })
     return df
 
 if __name__ == "__main__":
     SEARCH_QUERIES = {
-        "Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2021%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A41000&ref=srp&refId=ae734efc-d5ac-a8c1-0bad-5187bc37c427&s=Car&vc=Car",
+        #"Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2021%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A31000&ref=srp&refId=ae734efc-d5ac-a8c1-0bad-5187bc37c427&s=Car&vc=Car",
         # Добавьте сюда другие модели по аналогии:
-        "Volvo XC90": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2019%3A&isSearchRequest=true&ms=25100%3B37%3B%3B&p=20000%3A60000&ref=srp&refId=0c06e572-875d-3e61-f8c1-04f4ce559e3d&s=Car&vc=Car",
+        "Mercedes-Benz GLC": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2022%3A&ft=DIESEL&ft=HYBRID_DIESEL&isSearchRequest=true&ml=%3A100000&ms=17200%3B%3B59%3B&p=%3A40000&ref=srp&refId=7ecdc3ee-86c0-cde1-44de-54e9662d008e&s=Car&vc=Car",
         # "Audi A4": "https://suchen.mobile.de/fahrzeuge/search.html?brand=audi&model%5B%5D=a4&year_from=2019&",
-    }
+    }     
+
 
     print("Starting mobile.de scraper with final JSON logic...")
     

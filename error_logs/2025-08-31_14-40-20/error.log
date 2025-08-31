@@ -1,0 +1,39 @@
+Traceback (most recent call last):
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/core/connection.py", line 64, in wait_till_response_arrives
+    message = q.get(timeout=timeout)
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/queue.py", line 212, in get
+    raise Empty
+_queue.Empty
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus/browser_decorator.py", line 201, in run_task
+    result = func(driver, data)
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/src/scrape_mobile_de.py", line 15, in render_page_mobile_de
+    driver.google_get(url)
+    ~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/driver.py", line 2230, in google_get
+    self.get_via(
+    ~~~~~~~~~~~~^
+        link,
+        ^^^^^
+    ...<4 lines>...
+        timeout=timeout,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/driver.py", line 2199, in get_via
+    self._tab = self._browser.get(link, referrer=referer, )
+                ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/core/browser.py", line 310, in get
+    frame_id, _, *_ = connection.send(cdp.page.navigate(url, referrer=referrer))
+                      ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/core/connection.py", line 290, in send
+    return self.perform_send(cdp_obj, _is_update, wait_for_response)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/core/connection.py", line 310, in perform_send
+    result = wait_till_response_arrives(self.queue, tx_id , MAX_WAIT)
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/core/connection.py", line 68, in wait_till_response_arrives
+    raise TimeoutError("Response not received")
+TimeoutError: Response not received

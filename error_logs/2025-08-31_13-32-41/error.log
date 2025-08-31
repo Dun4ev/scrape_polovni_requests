@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus/browser_decorator.py", line 201, in run_task
+    result = func(driver, data)
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/src/scrape_mobile_de.py", line 15, in render_page_mobile_de
+    driver.google_get(url)
+    ~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/driver.py", line 2230, in google_get
+    self.get_via(
+    ~~~~~~~~~~~~^
+        link,
+        ^^^^^
+    ...<4 lines>...
+        timeout=timeout,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/driver.py", line 2201, in get_via
+    wait_till_document_is_ready(self._tab, self.config.wait_for_complete_page_load, timeout=timeout)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/j15/Library/CloudStorage/SynologyDrive-zapros/Code_and_Scripts/Working_with_websites/scrape_polovni_requests/venv/lib/python3.13/site-packages/botasaurus_driver/solve_cloudflare_captcha.py", line 40, in wait_till_document_is_ready
+    raise TimeoutError(f"Document did not become ready within {timeout} seconds")
+TimeoutError: Document did not become ready within 60 seconds
