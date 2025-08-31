@@ -162,10 +162,10 @@ if __name__ == "__main__":
 
     if all_dfs:
         final_df = pd.concat(all_dfs, ignore_index=True)
-        output_path = 'data/raw/mobile_de.csv'
+        output_path = 'data/raw/mobile_de.parquet'
         print(f"\nTotal results from mobile.de: {len(final_df)}")
         print(final_df.head())
-        final_df.to_csv(output_path, index=False)
+        final_df.to_parquet(output_path, index=False)
         print(f"\nData saved to {output_path}")
     else:
         print("No data was scraped from mobile.de.")

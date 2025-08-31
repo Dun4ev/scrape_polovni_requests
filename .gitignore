@@ -2,7 +2,7 @@
 venv/
 
 # Data and results
-data/
+# data/
 results/
 output/
 

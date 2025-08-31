@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
 import os
 from datetime import datetime
+
+from src.data_loader import load_all_data
+from src.analysis import get_top_deals, calculate_price_statistics
+from src.plotting import create_price_mileage_scatter_plot, create_price_distribution_box_plot
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -14,60 +16,9 @@ st.set_page_config(
 )
 
 # --- Data Loading ---
-@st.cache_data
-def load_all_data():
-    """Loads data from all available sources and combines them."""
-    data_sources = {
-        "polovni_automobili": "data/raw/polovni_automobili.csv",
-        "mobile.de": "data/raw/mobile_de.csv"
-    }
-    
-    all_dfs = []
-    for source_name, path in data_sources.items():
-        if os.path.exists(path):
-            df = pd.read_csv(path)
-            # Ensure source column exists for backward compatibility
-            if 'source' not in df.columns:
-                df['source'] = source_name
-            all_dfs.append(df)
-        else:
-            st.warning(f"Файл с данными для источника '{source_name}' не найден: {path}")
-
-    if not all_dfs:
-        return None
-
-    combined_df = pd.concat(all_dfs, ignore_index=True)
-    combined_df = combined_df.dropna(subset=["price_eur", "mileage_km", "year", "title"]).copy()
-    for col, dtype in {"price_eur": int, "mileage_km": int, "year": int}.items():
-        combined_df[col] = combined_df[col].astype(dtype)
-    
-    if 'search_group' not in combined_df.columns:
-        combined_df['search_group'] = 'Default'
-
-    # Create a new unique group for comparison, e.g., "Volvo XC60 (mobile.de)"
-    combined_df['comparison_group'] = combined_df['search_group'] + " (" + combined_df['source'] + ")"
-    
-    return combined_df
-
-# --- Helper Functions ---
-def get_top_deals(df):
-    if df.empty:
-        return pd.DataFrame()
-    max_km_limit = int(df['mileage_km'].max() + 50000)
-    bins = list(range(0, max_km_limit, 50000))
-    if not bins:
-        return pd.DataFrame()
-    labels = [f'{i/1000:,.0f} - {(i+50000)/1000:,.0f} тыс. км' for i in bins[:-1]]
-    df['mileage_bin'] = pd.cut(df['mileage_km'], bins=bins, labels=labels, right=False)
-    
-    # Group by the new comparison group
-    top_deals = df.groupby(['mileage_bin', 'comparison_group'], observed=False).apply(
-        lambda x: x.nsmallest(2, 'price_eur')
-    ).reset_index(drop=True)
-    return top_deals
-
-# --- Main App ---
-df = load_all_data()
+st.sidebar.title("Управление данными")
+force_reload = st.sidebar.button("Обновить данные из файлов")
+df = load_all_data(force_reload=force_reload)
 
 if df is None:
     st.error("Не найдено ни одного файла с данными в папке `data/raw/`.")
@@ -75,9 +26,8 @@ if df is None:
     st.stop()
 
 # --- Sidebar --- 
-st.sidebar.header("Фильтры")
+st.sidebar.title("Фильтры")
 
-# New filter for data source
 all_sources = sorted(df['source'].unique())
 selected_sources = st.sidebar.multiselect("Источники данных", all_sources, default=all_sources)
 
@@ -99,32 +49,7 @@ filtered_df = df[
 ].copy()
 
 # --- Calculations ---
-fig = go.Figure()
-if not filtered_df.empty:
-    # Use the new comparison_group for coloring
-    unique_comparison_groups = sorted(filtered_df['comparison_group'].unique())
-    color_map = {group: color for group, color in zip(unique_comparison_groups, px.colors.qualitative.Plotly)}
-    
-    for name, group_df in filtered_df.groupby('comparison_group'):
-        if len(group_df) < 3: continue
-        group_color = color_map.get(name, 'grey')
-        fig.add_trace(go.Scatter(
-            x=group_df['mileage_km'], y=group_df['price_eur'], mode='markers', name=name,
-            marker=dict(color=group_color), customdata=group_df['url'], text=group_df['title'],
-            hovertemplate="<b>%{text}</b><br>Цена: %{y:,.0f} €<br>Пробег: %{x:,.0f} km<br><i>Кликните для перехода</i><extra></extra>"
-        ))
-        X = np.c_[np.ones(len(group_df)), group_df["mileage_km"]/1000.0, group_df["year"]]
-        y = group_df["price_eur"].values
-        try:
-            beta = np.linalg.pinv(X.T @ X) @ (X.T @ y)
-            mid_year = int(group_df["year"].median())
-            km_grid = np.linspace(group_df["mileage_km"].min(), group_df["mileage_km"].max(), 100)
-            trend = beta[0] + beta[1]*(km_grid/1000.0) + beta[2]*mid_year
-            fig.add_trace(go.Scatter(x=km_grid, y=trend, mode='lines', name=f'Тренд для {name}', line=dict(color=group_color, dash='dash'), hoverinfo='skip'))
-        except np.linalg.LinAlgError:
-            st.warning(f"Не удалось построить модель для группы '{name}'.")
-
-fig.update_layout(xaxis_title="Пробег, км", yaxis_title="Цена, €", legend_title="Группы для сравнения", template="plotly_dark", height=650, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5))
+fig = create_price_mileage_scatter_plot(filtered_df)
 top_deals_df = get_top_deals(filtered_df)
 
 # --- Sidebar Export Button ---
@@ -195,7 +120,6 @@ if filtered_df.empty:
     st.warning("По заданным критериям не найдено ни одного автомобиля.")
 else:
     st.header("Зависимость цены от пробега для выбранных групп")
-    # Inject JS for clickable points
     js_code = '<script>var plot_div = document.getElementsByClassName("plotly-graph-div")[0]; plot_div.on("plotly_click", function(data){if(data.points.length > 0){var point = data.points[0]; var url = point.customdata; if(url){window.open(url, "_blank");}}});</script>'
     graph_html = fig.to_html(include_plotlyjs='cdn')
     graph_html = graph_html.replace('</body>', js_code + '</body>')
@@ -213,7 +137,6 @@ else:
     st.header("📊 Детальное сравнение цен между сайтами")
     st.write("Выберите модель для подробного анализа ценовых распределений по источникам.")
 
-    # Selectbox for choosing a search_group
     available_search_groups = sorted(filtered_df['search_group'].unique())
     if available_search_groups:
         selected_model_for_comparison = st.selectbox(
@@ -221,7 +144,6 @@ else:
             available_search_groups
         )
 
-        # Filter data for the selected model across all sources
         model_comparison_df = filtered_df[
             filtered_df['search_group'] == selected_model_for_comparison
         ].copy()
@@ -229,11 +151,7 @@ else:
         if not model_comparison_df.empty:
             st.subheader(f"Статистика цен для {selected_model_for_comparison}")
 
-            # Calculate statistics by source
-            price_stats = model_comparison_df.groupby('source')['price_eur'].agg(
-                ['mean', 'median', 'std', lambda x: x.quantile(0.25), lambda x: x.quantile(0.75)]
-            ).rename(columns={'<lambda_0>': '25th_percentile', '<lambda_1>': '75th_percentile'})
-
+            price_stats = calculate_price_statistics(model_comparison_df)
             st.dataframe(price_stats.style.format({
                 'mean': "€{:,.0f}",
                 'median': "€{:,.0f}",
@@ -242,7 +160,6 @@ else:
                 '75th_percentile': "€{:,.0f}"
             }))
 
-            # Calculate percentage difference in median prices
             if len(price_stats) > 1:
                 medians = price_stats['median'].to_dict()
                 sources = list(medians.keys())
@@ -268,11 +185,7 @@ else:
                 st.warning("Выберите данные как минимум с двух источников для сравнения.")
 
             st.subheader(f"Распределение цен для {selected_model_for_comparison}")
-            fig_box = px.box(model_comparison_df, x="source", y="price_eur", color="source",
-                             title=f"Распределение цен для {selected_model_for_comparison} по источникам",
-                             labels={"price_eur": "Цена, €", "source": "Источник"},
-                             template="plotly_dark")
-            fig_box.update_layout(showlegend=False) # Hide legend as source is on x-axis
+            fig_box = create_price_distribution_box_plot(model_comparison_df)
             st.plotly_chart(fig_box, use_container_width=True)
 
         else:

@@ -19,6 +19,7 @@ close_chrome==4.0.40
 contourpy==1.3.3
 cycler==0.12.1
 Deprecated==1.2.18
+duckdb
 et_xmlfile==2.0.0
 fonttools==4.59.1
 gevent==25.5.1

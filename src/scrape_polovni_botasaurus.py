@@ -123,7 +123,7 @@ if __name__ == "__main__":
         final_df = pd.concat(all_dfs, ignore_index=True)
         print(f"\nTotal results from all queries: {len(final_df)}")
         print(final_df.head())
-        final_df.to_csv('data/raw/polovni_automobili.csv', index=False)
-        print("\nData saved to data/raw/polovni_automobili.csv")
+        final_df.to_parquet('data/raw/polovni_automobili.parquet', index=False)
+        print("\nData saved to data/raw/polovni_automobili.parquet")
     else:
         print("No data was scraped.")
