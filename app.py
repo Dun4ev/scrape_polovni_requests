@@ -457,10 +457,27 @@ if st.sidebar.button("Сохранить отчет в HTML"):
                 comparison_html_parts.append('<div class="report-section">')
                 comparison_html_parts.append("<h2>🔬 Эконометрический анализ</h2>")
                 econometrics_fig_report = create_quantile_lowess_plot(model_comparison_df_report)
-                econometrics_plot_html = econometrics_fig_report.to_html(include_plotlyjs=False)
-                # Add click handler JS for plotly points (open listing URL)
-                econometrics_plot_html = econometrics_plot_html.replace('</body>', js_code + '</body>')
-                comparison_html_parts.append(econometrics_plot_html)
+                # Export as a bare div (no <html>/<body>) and attach a local click handler
+                econometrics_plot_html = econometrics_fig_report.to_html(include_plotlyjs=False, full_html=False)
+                econometrics_click_js = (
+                    "<script>"
+                    "(function(){"
+                    "var divs=document.getElementsByClassName('plotly-graph-div');"
+                    "if(!divs||!divs.length) return;"
+                    "var plot_div=divs[divs.length-1];"
+                    "if(plot_div&&plot_div.on){"
+                    "plot_div.on('plotly_click', function(data){"
+                    " if(data.points&&data.points.length>0){"
+                    "  var p=data.points[0];"
+                    "  var url=(p.customdata && p.customdata[0]) || null;"
+                    "  if(url){ window.open(url, '_blank'); }"
+                    " }"
+                    "});"
+                    "}"
+                    "})();"
+                    "</script>"
+                )
+                comparison_html_parts.append(econometrics_plot_html + econometrics_click_js)
 
                 # Hedonic Model Results for HTML
                 hedonic_model_report = run_hedonic_model(model_comparison_df_report)
