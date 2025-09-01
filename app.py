@@ -458,21 +458,182 @@ if st.sidebar.button("Сохранить отчет в HTML"):
                 comparison_html_parts.append("<h2>🔬 Эконометрический анализ</h2>")
                 econometrics_fig_report = create_quantile_lowess_plot(model_comparison_df_report)
                 econometrics_plot_html = econometrics_fig_report.to_html(include_plotlyjs=False)
+                # Add click handler JS for plotly points (open listing URL)
+                econometrics_plot_html = econometrics_plot_html.replace('</body>', js_code + '</body>')
                 comparison_html_parts.append(econometrics_plot_html)
 
                 # Hedonic Model Results for HTML
                 hedonic_model_report = run_hedonic_model(model_comparison_df_report)
                 if hedonic_model_report:
-                    comparison_html_parts.append("<h3>Результаты гедонистической модели</h3>")
-                    market_coeffs_report = {k: v for k, v in hedonic_model_report.params.items() if 'C(market' in k}
+                    comparison_html_parts.append("<h3>Гедонистическая модель оценки</h3>")
+                    comparison_html_parts.append("<p>Результаты регрессионного анализа, который оценивает 'чистую' разницу в ценах между рынками, контролируя пробег и возраст.</p>")
+                    if hasattr(hedonic_model_report, 'reference_market'):
+                        comparison_html_parts.append(f"<p><em>Базовый рынок для сравнения: <strong>{hedonic_model_report.reference_market}</strong></em></p>")
+
+                    # Support both naming schemes: 'market_*' and 'C(market)[T.*]'
+                    params = hedonic_model_report.params
+                    market_coeffs_report = {k: v for k, v in params.items() if k.startswith('market_')}
+                    if not market_coeffs_report:
+                        market_coeffs_report = {k: v for k, v in params.items() if 'C(market' in k}
+
                     if market_coeffs_report:
                         for market, coeff in market_coeffs_report.items():
-                            market_name = market.split('.')[-1].split(']')[0]
+                            if market.startswith('market_'):
+                                market_name = market.replace('market_', '')
+                            else:
+                                market_name = market.split('.')[-1].split(']')[0]
                             premium = (np.exp(coeff) - 1) * 100
                             comparison_html_parts.append(f"<p><strong>Премия рынка {market_name}:</strong> {premium:.2f}%</p>")
-                    
-                    comparison_html_parts.append("<h4>Полная таблица с коэффициентами:</h4>")
-                    comparison_html_parts.append(f"<pre>{hedonic_model_report.summary()}</pre>")
+
+                    # Build the same HTML table with tooltips as in the app
+                    # Tooltips definitions (mirrors on-page)
+                    tooltips = {
+                        "R-squared": "Что это: Процент изменений цены, который объясняет модель. Практическое применение: Чем ближе к 1, тем лучше.",
+                        "Adj. R-squared": "Скорректированный R-квадрат: учитывает число факторов; полезен для сравнения моделей.",
+                        "AIC": "Информационный критерий Акаике: меньше — лучше при прочих равных.",
+                        "BIC": "Байесовский информационный критерий: меньше — лучше.",
+                        "coef": "Оценка коэффициента регрессии (в лог-цене).",
+                        "std err": "Стандартная ошибка коэффициента.",
+                        "t": "t-статистика для проверки значимости коэффициента.",
+                        "P>|t|": "p-значение: < 0.05 — статистически значимо.",
+                        "[0.025": "Нижняя граница 95% ДИ.",
+                        "0.975]": "Верхняя граница 95% ДИ.",
+                        "market_": "Бинарные индикаторы рынков; коэффициент — премия/дисконт к базовому рынку.",
+                        "I(mileage_km ** 2)": "Квадратичный эффект пробега: учитывает нелинейность связи с ценой."
+                    }
+
+                    def _get_tooltip(term: str) -> str:
+                        term = term.strip().replace(":", "")
+                        if term == "I(mileage_km ** 2)":
+                            return html.escape(tooltips.get("I(mileage_km ** 2)", ""), quote=True)
+                        if term in tooltips:
+                            return html.escape(tooltips[term], quote=True)
+                        if term.startswith("market_") or term.startswith("C(market"):
+                            return html.escape(tooltips["market_"], quote=True)
+                        if term.startswith("[0.025"):
+                            return html.escape(tooltips["[0.025"], quote=True)
+                        if term.endswith("0.975]"):
+                            return html.escape(tooltips["0.975]"], quote=True)
+                        return ""
+
+                    summary = hedonic_model_report.summary()
+                    # Table 1
+                    html_output = "<h4>Таблица 1: Общая информация о модели</h4>"
+                    table1_data = summary.tables[0].data
+                    html_output += "<table class='statsmodels-table'>"
+                    for row in table1_data:
+                        html_output += "<tr>"
+                        if len(row) >= 4:
+                            html_output += f"<td class='header' title='{_get_tooltip(row[0])}'>{row[0]}</td><td>{row[1]}</td>"
+                            html_output += f"<td class='header' title='{_get_tooltip(row[2])}'>{row[2]}</td><td>{row[3]}</td>"
+                        html_output += "</tr>"
+                    html_output += "</table><br>"
+
+                    # Table 2
+                    html_output += "<h4>Таблица 2: Коэффициенты модели</h4>"
+                    table2_data = summary.tables[1].data
+                    html_output += "<table class='statsmodels-table'>"
+                    html_output += "<thead><tr>"
+                    for header_cell in table2_data[0]:
+                        html_output += f"<th title='{_get_tooltip(header_cell)}'>{header_cell}</th>"
+                    html_output += "</tr></thead>"
+                    html_output += "<tbody>"
+                    for row in table2_data[1:]:
+                        html_output += "<tr>"
+                        html_output += f"<td class='header' title='{_get_tooltip(row[0])}'>{row[0]}</td>"
+                        for cell in row[1:]:
+                            html_output += f"<td>{cell}</td>"
+                        html_output += "</tr>"
+                    html_output += "</tbody></table><br>"
+
+                    # Table 3
+                    html_output += "<h4>Таблица 3: Дополнительные диагностические тесты</h4>"
+                    table3_data = summary.tables[2].data
+                    html_output += "<table class='statsmodels-table'>"
+                    for row in table3_data:
+                        html_output += "<tr>"
+                        if len(row) >= 4:
+                            html_output += f"<td class='header' title='{_get_tooltip(row[0])}'>{row[0]}</td><td>{row[1]}</td>"
+                            html_output += f"<td class='header' title='{_get_tooltip(row[2])}'>{row[2]}</td><td>{row[3]}</td>"
+                        html_output += "</tr>"
+                    html_output += "</table>"
+
+                    statsmodels_css = """
+                    <style>
+                        .statsmodels-summary table.statsmodels-table {
+                            font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
+                            border-collapse: collapse;
+                            width: 100%;
+                            color: #FAFAFA;
+                            background-color: #0E1117;
+                        }
+                        .statsmodels-summary th, .statsmodels-summary td {
+                            text-align: right;
+                            border: 1px solid #262730;
+                            padding: 8px;
+                            font-size: 0.9rem;
+                        }
+                        .statsmodels-summary .header, .statsmodels-summary th {
+                            text-align: left;
+                            font-weight: bold;
+                        }
+                        .statsmodels-summary h4 {
+                            margin-top: 20px;
+                            margin-bottom: 10px;
+                            font-weight: bold;
+                            color: #FAFAFA;
+                        }
+                        .statsmodels-summary td[title]:hover {
+                            cursor: help;
+                            background-color: #262730;
+                        }
+                    </style>
+                    """
+
+                    # Header like in the app
+                    comparison_html_parts.append("<h4>Полная таблица с коэффициентами модели:</h4>")
+                    comparison_html_parts.append(statsmodels_css + f"<div class='statsmodels-summary'>{html_output}</div>")
+                else:
+                    comparison_html_parts.append("<h3>Гедонистическая модель оценки</h3>")
+                    comparison_html_parts.append("<p>Недостаточно данных для оценки модели на выбранной подвыборке.</p>")
+
+                    # Explanations (as on page) — added to exported report
+                    explanations_html = """
+                    <div class='report-section'>
+                      <h3>Как читать график? (Тренды и коридоры)</h3>
+                      <p>График показывает зависимость цены от пробега с дополнительными аналитическими слоями.</p>
+                      <ul>
+                        <li><strong>Цветные точки</strong>: Каждая точка — отдельный автомобиль с одного из рынков.</li>
+                        <li><strong>Цветные линии (Тренды)</strong>: Сглаженные средние цены для каждого рынка.</li>
+                        <li><strong>Пунктирные коридоры</strong>: 25–75% — «ядро» рынка; 10–90% — крайние уровни.</li>
+                      </ul>
+                      <p><strong>Как использовать</strong>: если автомобиль ниже линии 10%, это очень дешевая сделка; внутри 25–75% — цена «нормальная».</p>
+                    </div>
+                    <div class='report-section'>
+                      <h3>Как читать таблицу: Качество модели (R-squared и др.)</h3>
+                      <ul>
+                        <li><strong>R-squared</strong>: Доля вариации цены, объясненная моделью. Ближе к 1 — лучше.</li>
+                        <li><strong>No. Observations</strong>: Количество авто в выборке — больше обычно лучше.</li>
+                        <li><strong>Prob (F-statistic)</strong>: Если значение близко к 0, модель в целом значима.</li>
+                      </ul>
+                      <p><strong>Вывод</strong>: высокие R-squared и значимый F-тест повышают доверие к выводам.</p>
+                    </div>
+                    <div class='report-section'>
+                      <h3>Как читать таблицу: Влияние факторов (коэффициенты)</h3>
+                      <ul>
+                        <li><strong>coef</strong>: Знак и сила влияния на лог-цену (например, возраст — отрицательно).</li>
+                        <li><strong>market_…</strong>: Премия/дисконт рынка относительно базового.</li>
+                        <li><strong>P>|t|</strong>: &lt; 0.05 — влияние статистически значимо.</li>
+                      </ul>
+                    </div>
+                    <div class='report-section'>
+                      <h3>Как читать таблицу: Техническая диагностика</h3>
+                      <ul>
+                        <li><strong>Durbin–Watson</strong>: Около 2 — приемлемо для остатков.</li>
+                      </ul>
+                    </div>
+                    """
+                    comparison_html_parts.append(explanations_html)
 
                 comparison_html_parts.append('</div>')
 
