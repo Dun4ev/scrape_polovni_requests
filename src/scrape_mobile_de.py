@@ -152,10 +152,10 @@ def scrape_mobile_de(url):
 
 if __name__ == "__main__":
     SEARCH_QUERIES = {
-        #"Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2021%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A31000&ref=srp&refId=ae734efc-d5ac-a8c1-0bad-5187bc37c427&s=Car&vc=Car",
+        #"Volvo XC60": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2018%3A&isSearchRequest=true&ms=25100%3B40%3B%3B&p=20000%3A35000&ref=srp&refId=d8239998-60d5-6af1-c725-4d0e6f7fce3d&s=Car&vc=Car",
         # Добавьте сюда другие модели по аналогии:
-        "Mercedes-Benz GLC": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2022%3A&ft=DIESEL&ft=HYBRID_DIESEL&isSearchRequest=true&ml=%3A100000&ms=17200%3B%3B59%3B&p=%3A40000&ref=srp&refId=7ecdc3ee-86c0-cde1-44de-54e9662d008e&s=Car&vc=Car",
-        # "Audi A4": "https://suchen.mobile.de/fahrzeuge/search.html?brand=audi&model%5B%5D=a4&year_from=2019&",
+        #"Mercedes-Benz GLC": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2018%3A2022&ft=DIESEL&ft=HYBRID_DIESEL&isSearchRequest=true&ms=17200%3B%3B59%3B&p=20000%3A35000&ref=srp&refId=05b1d407-69ab-748b-47a3-b8801c33813d&s=Car&vc=Car",
+        "Volvo XC90": "https://suchen.mobile.de/fahrzeuge/search.html?dam=false&fr=2018%3A&isSearchRequest=true&ms=25100%3B37%3B%3B&p=20000%3A&ref=srpHead&refId=79069777-0876-c3c2-db5a-8f0b58dc30c4&s=Car&vc=Car",
     }     
 
 
