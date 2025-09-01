@@ -198,6 +198,26 @@ if st.sidebar.button("Сохранить отчет в HTML"):
         # --- Assemble Final HTML ---
         title_str = f"📊 Сравнительный анализ рынков автомобилей: {', '.join(sorted(filtered_df['comparison_group'].unique()))}"
         
+        css_style = """
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #111; color: #eee; margin: 2rem; }
+            h1, h2, h3 { color: #eee; border-bottom: 1px solid #444; padding-bottom: 10px; font-weight: 400; }
+            h1 { font-size: 2.2rem; }
+            h2 { font-size: 1.75rem; margin-top: 3rem; }
+            h3 { font-size: 1.4rem; margin-top: 2rem; border-bottom: none; }
+            .report-section { margin-bottom: 2rem; padding: 1rem; background-color: #1e1e1e; border-radius: 8px; }
+            .deals_table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+            .deals_table th, .deals_table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #333; }
+            .deals_table th { background-color: #222; cursor: pointer; }
+            .deals_table tr:hover { background-color: #2a2a2a; }
+            .deals_table th.sort-up::after { content: " ▲"; }
+            .deals_table th.sort-down::after { content: " ▼"; }
+            a { color: #3498db; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+            p { margin: 1rem 0; line-height: 1.6; }
+        </style>
+        """
+
         report_html = f"""
         <html>
             <head>
@@ -205,23 +225,7 @@ if st.sidebar.button("Сохранить отчет в HTML"):
                 <title>Аналитический отчет</title>
                 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
                 <script src="https://cdn.jsdelivr.net/npm/vanilla-js-tablesort@0.1.0/dist/vanilla-js-tablesort.min.js"></script>
-                <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #111; color: #eee; margin: 2rem; }
-                    h1, h2, h3 { color: #eee; border-bottom: 1px solid #444; padding-bottom: 10px; font-weight: 400; }
-                    h1 { font-size: 2.2rem; }
-                    h2 { font-size: 1.75rem; margin-top: 3rem; }
-                    h3 { font-size: 1.4rem; margin-top: 2rem; border-bottom: none; }
-                    .report-section { margin-bottom: 2rem; padding: 1rem; background-color: #1e1e1e; border-radius: 8px; }
-                    .deals_table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-                    .deals_table th, .deals_table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #333; }
-                    .deals_table th { background-color: #222; cursor: pointer; }
-                    .deals_table tr:hover { background-color: #2a2a2a; }
-                    .deals_table th.sort-up::after { content: " ▲"; }
-                    .deals_table th.sort-down::after { content: " ▼"; }
-                    a { color: #3498db; text-decoration: none; }
-                    a:hover { text-decoration: underline; }
-                    p { margin: 1rem 0; line-height: 1.6; }
-                </style>
+                {css_style}
             </head>
             <body>
                 <h1>{title_str}</h1>
