@@ -21,7 +21,7 @@ def create_price_mileage_scatter_plot(df):
                 marker=dict(color=group_color), 
                 customdata=custom_data,
                 text=group_df['title'],
-                hovertemplate="<b>%{text}</b><br>Цена: %{y:,.0f} €<br>Пробег: %{x:,.0f} km<br><b>Источник: %{customdata[1]}</b><br><i>Кликните для перехода</i><extra></extra>"
+                hovertemplate="<span style='font-size: 12px;'><b>%{text}</b><br>Цена: %{y:,.0f} €<br>Пробег: %{x:,.0f} km<br><b>Источник: %{customdata[1]}</b><br><i>Кликните для перехода</i></span><extra></extra>"
             ))
             X = np.c_[np.ones(len(group_df)), group_df["mileage_km"]/1000.0, group_df["year"]]
             y = group_df["price_eur"].values

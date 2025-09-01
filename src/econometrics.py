@@ -68,14 +68,16 @@ def create_quantile_lowess_plot(df):
         ))
 
         # Scatter plot of the actual data
+        custom_data = np.stack((market_df['url'], market_df['source']), axis=-1)
         fig.add_trace(go.Scatter(
             x=market_df['mileage_km'],
             y=market_df['price_eur'],
             mode='markers',
             name=market,
             marker=dict(color=color_map[market], opacity=0.4, size=5), # Made markers smaller
+            customdata=custom_data,
             text=market_df['title'],
-            hovertemplate="<b>%{text}</b><br><b>Источник:</b> "+ market +"<br><b>Цена:</b> %{y:,.0f} €<br><b>Пробег:</b> %{x:,.0f} km<extra></extra>"
+            hovertemplate="<span style='font-size: 12px;'><b>%{text}</b><br>Цена: %{y:,.0f} €<br>Пробег: %{x:,.0f} km<br><b>Источник: %{customdata[1]}</b><br><i>Кликните для перехода</i></span><extra></extra>"
         ))
 
     fig.update_layout(
