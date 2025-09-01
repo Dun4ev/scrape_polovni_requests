@@ -60,10 +60,15 @@ if filtered_df.empty:
     st.warning("По заданным критериям не найдено ни одного автомобиля.")
 else:
     st.header("Зависимость цены от пробега для выбранных групп")
-    js_code = '<script>var plot_div = document.getElementsByClassName(\"plotly-graph-div\")[0]; plot_div.on(\"plotly_click\", function(data){if(data.points.length > 0){var point = data.points[0]; var url = point.customdata; if(url){window.open(url, \"_blank\");}}});</script>'
+    js_code = '<script>var plot_div = document.getElementsByClassName(\"plotly-graph-div\")[0]; plot_div.on(\"plotly_click\", function(data){if(data.points.length > 0){var point = data.points[0]; var url = point.customdata[0]; if(url){window.open(url, \"_blank\");}}});</script>'
     graph_html = fig.to_html(include_plotlyjs='cdn')
     graph_html = graph_html.replace('</body>', js_code + '</body>')
     st.components.v1.html(graph_html, height=700, scrolling=True)
+
+    if not filtered_df.empty:
+        source_counts = filtered_df['source'].value_counts().to_dict()
+        summary_parts = [f"**{source}**: {count}" for source, count in source_counts.items()]
+        st.write("Количество объявлений по источникам: " + ", ".join(summary_parts))
 
     st.header("⭐ Топ-2 самых дешевых предложения по группам пробега")
     st.write("Поиск самых низких цен в каждом диапазоне пробега.")
@@ -140,8 +145,16 @@ if st.sidebar.button("Сохранить отчет в HTML"):
     if not filtered_df.empty:
         # --- Part 1: Scatter Plot ---
         graph_html = fig.to_html(include_plotlyjs='cdn')
-        js_code = '<script>var plot_div = document.getElementsByClassName(\"plotly-graph-div\")[0]; plot_div.on(\"plotly_click\", function(data){if(data.points.length > 0){var point = data.points[0]; var url = point.customdata; if(url){window.open(url, \"_blank\");}}});</script>'
+        js_code = '<script>var plot_div = document.getElementsByClassName(\"plotly-graph-div\")[0]; plot_div.on(\"plotly_click\", function(data){if(data.points.length > 0){var point = data.points[0]; var url = point.customdata[0]; if(url){window.open(url, \"_blank\");}}});</script>'
         graph_html = graph_html.replace('</body>', js_code + '</body>')
+
+        # --- Listings Summary for HTML ---
+        if not filtered_df.empty:
+            source_counts = filtered_df['source'].value_counts().to_dict()
+            summary_parts_html = [f"<strong>{source}</strong>: {count}" for source, count in source_counts.items()]
+            listings_summary_html = f'<p><strong>Количество объявлений по источникам:</strong> {", ".join(summary_parts_html)}</p>'
+        else:
+            listings_summary_html = ""
 
         # --- Part 2: Top Deals Table ---
         deals_for_html = top_deals_df.copy()
@@ -203,7 +216,7 @@ if st.sidebar.button("Сохранить отчет в HTML"):
         
         css_style = """
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #111; color: #eee; margin: 2rem; }
+            body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; background-color: #111; color: #eee; margin: 2rem; }
             h1, h2, h3 { color: #eee; border-bottom: 1px solid #444; padding-bottom: 10px; font-weight: 400; }
             h1 { font-size: 2.2rem; }
             h2 { font-size: 1.75rem; margin-top: 3rem; }
@@ -213,8 +226,8 @@ if st.sidebar.button("Сохранить отчет в HTML"):
             .deals_table th, .deals_table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #333; }
             .deals_table th { background-color: #222; cursor: pointer; }
             .deals_table tr:hover { background-color: #2a2a2a; }
-            .deals_table th.sort-up::after { content: " ▲"; }
-            .deals_table th.sort-down::after { content: " ▼"; }
+            .deals_table th.sort-up::after { content: \" ▲\"; }
+            .deals_table th.sort-down::after { content: \" ▼\"; }
             a { color: #3498db; text-decoration: none; }
             a:hover { text-decoration: underline; }
             p { margin: 1rem 0; line-height: 1.6; }
@@ -235,6 +248,7 @@ if st.sidebar.button("Сохранить отчет в HTML"):
             <body>
                 <h1>{title_str}</h1>
                 <div class="report-section">{graph_html}</div>
+                {listings_summary_html}
                 <div class="report-section">
                     <h2>Топ-2 самых дешевых предложения по группам пробега</h2>
                     {table_html}

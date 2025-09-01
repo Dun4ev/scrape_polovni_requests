@@ -1,4 +1,3 @@
-
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
@@ -14,10 +13,15 @@ def create_price_mileage_scatter_plot(df):
         for name, group_df in df.groupby('comparison_group'):
             if len(group_df) < 3: continue
             group_color = color_map.get(name, 'grey')
+            
+            custom_data = np.stack((group_df['url'], group_df['source']), axis=-1)
+
             fig.add_trace(go.Scatter(
                 x=group_df['mileage_km'], y=group_df['price_eur'], mode='markers', name=name,
-                marker=dict(color=group_color), customdata=group_df['url'], text=group_df['title'],
-                hovertemplate="<b>%{text}</b><br>Цена: %{y:,.0f} €<br>Пробег: %{x:,.0f} km<br><i>Кликните для перехода</i><extra></extra>"
+                marker=dict(color=group_color), 
+                customdata=custom_data,
+                text=group_df['title'],
+                hovertemplate="<b>%{text}</b><br>Цена: %{y:,.0f} €<br>Пробег: %{x:,.0f} km<br><b>Источник: %{customdata[1]}</b><br><i>Кликните для перехода</i><extra></extra>"
             ))
             X = np.c_[np.ones(len(group_df)), group_df["mileage_km"]/1000.0, group_df["year"]]
             y = group_df["price_eur"].values
