@@ -161,12 +161,15 @@ if st.sidebar.button("Сохранить отчет в HTML"):
 
                 # Stats Table
                 price_stats_report = calculate_price_statistics(model_comparison_df_report)
-                stats_table_html = price_stats_report.style.format({
-                    'mean': "€{:,.0f}", 'median': "€{:,.0f}", 'std': "€{:,.0f}",
-                    '25th_percentile': "€{:,.0f}", '75th_percentile': "€{:,.0f}"
-                }).to_html(index=True, justify='left', border=0, classes='deals_table')
-                comparison_html_parts.append("<h3>Статистика цен</h3>")
-                comparison_html_parts.append(stats_table_html)
+                if not price_stats_report.empty:
+                    stats_table_html = price_stats_report.style.format({
+                        'mean': "€{:,.0f}", 'median': "€{:,.0f}", 'std': "€{:,.0f}",
+                        '25th_percentile': "€{:,.0f}", '75th_percentile': "€{:,.0f}"
+                    }).to_html(index=True, justify='left', border=0, classes='deals_table', table_uuid='stats-table')
+                    comparison_html_parts.append("<h3>Статистика цен</h3>")
+                    comparison_html_parts.append(stats_table_html)
+                else:
+                    comparison_html_parts.append("<p>Нет данных для отображения статистики по выбранной модели.</p>")
 
                 # Median Difference Text
                 if len(price_stats_report) > 1:
@@ -215,6 +218,8 @@ if st.sidebar.button("Сохранить отчет в HTML"):
             a { color: #3498db; text-decoration: none; }
             a:hover { text-decoration: underline; }
             p { margin: 1rem 0; line-height: 1.6; }
+            #T_stats-table { width: 100%; }
+            #T_stats-table th, #T_stats-table td { text-align: center; }
         </style>
         """
 
