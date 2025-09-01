@@ -74,7 +74,17 @@ else:
 
     st.header("⭐ Топ-2 самых дешевых предложения по группам пробега")
     st.write("Поиск самых низких цен в каждом диапазоне пробега.")
-    st.dataframe(top_deals_df, use_container_width=True, height=1150, column_config={
+    # Make the table height dynamic: cap at 1150px, shrink when rows are fewer
+    try:
+        _rows = int(len(top_deals_df))
+    except Exception:
+        _rows = 0
+    _ROW_PX = 34   # approx row height in Streamlit dataframe
+    _HDR_PX = 38   # approx header height
+    _PAD_PX = 16   # small padding
+    _MAX_PX = 1150
+    deals_table_height = min(_MAX_PX, _HDR_PX + _ROW_PX * max(_rows, 1) + _PAD_PX)
+    st.dataframe(top_deals_df, use_container_width=True, height=int(deals_table_height), column_config={
         "url": st.column_config.LinkColumn("Ссылка", display_text="Перейти ↗"),
         "comparison_group": st.column_config.Column("Группа"),
         "mileage_bin": st.column_config.Column("Категория пробега"),
