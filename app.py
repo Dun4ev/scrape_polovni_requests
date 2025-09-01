@@ -7,6 +7,7 @@ from datetime import datetime
 from src.data_loader import load_all_data
 from src.analysis import get_top_deals, calculate_price_statistics
 from src.plotting import create_price_mileage_scatter_plot, create_price_distribution_box_plot
+from src.econometrics import create_quantile_lowess_plot, run_hedonic_model
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -133,6 +134,62 @@ else:
             fig_box = create_price_distribution_box_plot(model_comparison_df)
             st.plotly_chart(fig_box, use_container_width=True)
 
+            st.header("🔬 Эконометрический анализ")
+            st.write("Этот график показывает более сложный анализ зависимости цены от пробега с использованием квантильных коридоров и LOWESS сглаживания.")
+            econometrics_fig = create_quantile_lowess_plot(model_comparison_df)
+            st.plotly_chart(econometrics_fig, use_container_width=True)
+
+            st.subheader("Гедонистическая модель оценки")
+            hedonic_model = run_hedonic_model(model_comparison_df)
+            if hedonic_model:
+                st.write("Результаты регрессионного анализа, который оценивает 'чистую' разницу в ценах между рынками, контролируя пробег и возраст.")
+                
+                market_coeffs = {k: v for k, v in hedonic_model.params.items() if k.startswith('market_')}
+                if market_coeffs:
+                    # Also show the reference market
+                    if hasattr(hedonic_model, 'reference_market'):
+                        st.write(f"*(Базовый рынок для сравнения: **{hedonic_model.reference_market}**)*")
+
+                    for market_var, coeff in market_coeffs.items():
+                        # Extract market name from 'market_polovni_automobili'
+                        market_name = market_var.replace('market_', '')
+                        premium = (np.exp(coeff) - 1) * 100
+                        st.metric(label=f"Премия рынка {market_name}", value=f"{premium:.2f}%" )
+                
+                st.write("Полная таблица с коэффициентами модели:")
+                # Convert summary to HTML and inject CSS for better styling in Streamlit dark theme
+                summary_html = hedonic_model.summary().as_html()
+                st.markdown(f"""
+                <style>
+                    .statsmodels-summary table {{
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        border-collapse: collapse;
+                        width: 100%;
+                        color: #FAFAFA;
+                        background-color: #0E1117;
+                    }}
+                    .statsmodels-summary th {{
+                        text-align: center;
+                        font-weight: bold;
+                        border: 1px solid #262730;
+                        padding: 8px;
+                    }}
+                    .statsmodels-summary td {{
+                        text-align: right;
+                        border: 1px solid #262730;
+                        padding: 8px;
+                    }}
+                    .statsmodels-summary .header, .statsmodels-summary .stub {{
+                        text-align: left;
+                    }}
+                </style>
+                <div class="statsmodels-summary">
+                    {summary_html}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.warning("Недостаточно данных для построения гедонистической модели.")
+
         else:
             st.warning("Нет данных для выбранной модели для сравнения.")
     else:
@@ -208,7 +265,30 @@ if st.sidebar.button("Сохранить отчет в HTML"):
                 comparison_html_parts.append("<h3>Распределение цен по источникам</h3>")
                 comparison_html_parts.append(box_plot_html)
                 comparison_html_parts.append('</div>')
-        
+
+                # Econometrics Plot
+                comparison_html_parts.append('<div class="report-section">')
+                comparison_html_parts.append("<h2>🔬 Эконометрический анализ</h2>")
+                econometrics_fig_report = create_quantile_lowess_plot(model_comparison_df_report)
+                econometrics_plot_html = econometrics_fig_report.to_html(include_plotlyjs=False)
+                comparison_html_parts.append(econometrics_plot_html)
+
+                # Hedonic Model Results for HTML
+                hedonic_model_report = run_hedonic_model(model_comparison_df_report)
+                if hedonic_model_report:
+                    comparison_html_parts.append("<h3>Результаты гедонистической модели</h3>")
+                    market_coeffs_report = {k: v for k, v in hedonic_model_report.params.items() if 'C(market' in k}
+                    if market_coeffs_report:
+                        for market, coeff in market_coeffs_report.items():
+                            market_name = market.split('.')[-1].split(']')[0]
+                            premium = (np.exp(coeff) - 1) * 100
+                            comparison_html_parts.append(f"<p><strong>Премия рынка {market_name}:</strong> {premium:.2f}%</p>")
+                    
+                    comparison_html_parts.append("<h4>Полная таблица с коэффициентами:</h4>")
+                    comparison_html_parts.append(f"<pre>{hedonic_model_report.summary()}</pre>")
+
+                comparison_html_parts.append('</div>')
+
         final_comparison_html = "\n".join(comparison_html_parts)
 
         # --- Assemble Final HTML ---
